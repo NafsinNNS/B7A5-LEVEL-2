@@ -17,7 +17,7 @@ const propertyImages = [
   "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?q=80&w=1200&auto=format&fit=crop",
 ];
 
-const getPropertyImage = (id: string) => {
+export const getPropertyImage = (id: string) => {
   let hash = 0;
   for (let i = 0; i < id.length; i++) {
     hash = (hash * 31 + id.charCodeAt(i)) >>> 0;

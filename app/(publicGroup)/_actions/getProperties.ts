@@ -31,3 +31,20 @@ export const getProperties = async (query: TPropertyQuery = {}) => {
     } as TApiResponse<TProperty[]>;
   }
 };
+
+export const getPropertyById = async (propertyId: string) => {
+  const url = `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/properties/${propertyId}`;
+
+  try {
+    const res = await fetch(url, { cache: "no-store" });
+    const result = await res.json();
+    return result as TApiResponse<TProperty>;
+  } catch {
+    return {
+      success: false,
+      statusCode: 500,
+      message: "Failed to fetch property",
+      data: null,
+    } as TApiResponse<TProperty | null>;
+  }
+};

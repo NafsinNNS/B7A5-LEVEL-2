@@ -17,12 +17,18 @@ export const getMe = async () => {
   }
 
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/auth/me`, {
-      headers: { Cookie: `accessToken=${accessToken}` },
-      cache: "no-store",
-    });
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/auth/me`,
+      {
+        headers: { Cookie: `accessToken=${accessToken}` },
+        cache: "no-store",
+      }
+    );
     const result = await res.json();
-    return result as TApiResponse<TUser | null>;
+    return {
+      ...result,
+      data: result?.data?.myUser ?? null,
+    } as TApiResponse<TUser | null>;
   } catch {
     return {
       success: false,

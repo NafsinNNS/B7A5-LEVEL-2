@@ -15,11 +15,7 @@ import {
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Logo } from "@/components/shared/logo";
 import { logout } from "@/service/logout";
 import { cn } from "@/lib/utils";
@@ -86,7 +82,6 @@ export function Navbar({ user }: NavbarProps) {
                 className="flex items-center gap-2 rounded-full p-1 outline-none ring-primary transition-shadow hover:ring-2"
               >
                 <Avatar className="size-9">
-                  <AvatarImage src="" alt={user.data!.name} />
                   <AvatarFallback className="bg-primary text-primary-foreground">
                     {user.data!.name.slice(0, 2).toUpperCase()}
                   </AvatarFallback>

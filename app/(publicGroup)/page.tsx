@@ -9,11 +9,9 @@ import {
   Home,
   KeyRound,
   MapPin,
-  Quote,
   Search,
   ShieldCheck,
   Sparkles,
-  Star,
   Warehouse,
 } from "lucide-react";
 
@@ -32,13 +30,6 @@ const categoryIcons: Record<string, typeof Building2> = {
   DUPLEX: Warehouse,
   ROOM: DoorOpen,
 };
-
-const stats = [
-  { value: "500+", label: "Properties Listed" },
-  { value: "1.2k+", label: "Happy Tenants" },
-  { value: "150+", label: "Trusted Landlords" },
-  { value: "24/7", label: "Customer Support" },
-];
 
 const steps = [
   {
@@ -88,30 +79,6 @@ const features = [
   },
 ];
 
-const testimonials = [
-  {
-    name: "Rafiul Islam",
-    role: "Tenant · Dhaka",
-    quote:
-      "RentNest made finding my apartment so easy. I sent a request, got approved in a day, and paid securely online. Best rental experience I've had!",
-    initials: "RI",
-  },
-  {
-    name: "Sadia Rahman",
-    role: "Tenant · Chattogram",
-    quote:
-      "The listings are accurate and the payment process is seamless. I love the transparency — no broker fees, no surprises.",
-    initials: "SR",
-  },
-  {
-    name: "Tanvir Ahmed",
-    role: "Landlord · Dhaka",
-    quote:
-      "As a landlord, RentNest helps me manage requests and payments without any hassle. My properties are always rented quickly.",
-    initials: "TA",
-  },
-];
-
 export default async function HomePage() {
   const [categoriesResult, propertiesResult] = await Promise.all([
     getCategories(),
@@ -149,17 +116,6 @@ export default async function HomePage() {
 
             <div className="mt-8">
               <HeroSearchBar categories={categories} />
-            </div>
-
-            <div className="mt-8 flex flex-wrap gap-6">
-              {stats.map((stat) => (
-                <div key={stat.label}>
-                  <p className="font-heading text-2xl font-bold text-primary">
-                    {stat.value}
-                  </p>
-                  <p className="text-xs text-muted-foreground">{stat.label}</p>
-                </div>
-              ))}
             </div>
           </div>
 
@@ -364,48 +320,6 @@ export default async function HomePage() {
               </div>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* ============ TESTIMONIALS ============ */}
-      <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6">
-        <div className="mx-auto max-w-2xl text-center">
-          <p className="text-sm font-semibold uppercase tracking-wider text-primary">
-            Testimonials
-          </p>
-          <h2 className="font-heading mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
-            Loved by Tenants & Landlords
-          </h2>
-        </div>
-
-        <div className="mt-12 grid gap-6 md:grid-cols-3">
-          {testimonials.map((testimonial) => (
-            <figure
-              key={testimonial.name}
-              className="flex flex-col rounded-2xl border bg-card p-8 shadow-sm"
-            >
-              <Quote className="size-8 text-primary/30" />
-              <blockquote className="mt-4 flex-1 text-sm leading-relaxed text-muted-foreground">
-                &ldquo;{testimonial.quote}&rdquo;
-              </blockquote>
-              <div className="mt-6 flex items-center gap-2">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Star key={i} className="size-4 fill-amber-400 text-amber-400" />
-                ))}
-              </div>
-              <figcaption className="mt-4 flex items-center gap-3">
-                <span className="flex size-10 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
-                  {testimonial.initials}
-                </span>
-                <div>
-                  <p className="text-sm font-semibold">{testimonial.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {testimonial.role}
-                  </p>
-                </div>
-              </figcaption>
-            </figure>
-          ))}
         </div>
       </section>
 

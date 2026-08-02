@@ -2,16 +2,11 @@ import Link from "next/link";
 import {
   AtSign,
   Globe,
-  Mail,
-  MapPin,
   MessageCircle,
-  Phone,
-  Send,
   Share2,
 } from "lucide-react";
 
 import { Logo } from "@/components/shared/logo";
-import { NewsletterForm } from "@/components/shared/newsletter-form";
 
 const footerColumns = [
   {
@@ -93,23 +88,7 @@ export function Footer() {
           ))}
         </div>
 
-        <div className="mt-12 grid gap-8 border-t pt-8 lg:grid-cols-2 lg:items-center">
-          <div className="grid gap-3 text-sm text-muted-foreground sm:grid-cols-3">
-            <span className="flex items-center gap-2">
-              <Phone className="size-4 text-primary" /> +880 1XXX-XXXXXX
-            </span>
-            <span className="flex items-center gap-2">
-              <Mail className="size-4 text-primary" /> hello@rentnest.com
-            </span>
-            <span className="flex items-center gap-2">
-              <MapPin className="size-4 text-primary" /> Dhaka, Bangladesh
-            </span>
-          </div>
-
-          <NewsletterForm />
-        </div>
-
-        <div className="mt-8 flex flex-col items-center justify-between gap-3 border-t pt-6 text-xs text-muted-foreground sm:flex-row">
+        <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t pt-6 text-xs text-muted-foreground sm:flex-row">
           <p>&copy; {new Date().getFullYear()} RentNest. All rights reserved.</p>
           <div className="flex gap-6">
             <Link href="#" className="transition-colors hover:text-foreground">

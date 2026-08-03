@@ -10,6 +10,7 @@ import {
   getPropertyReviews,
 } from "@/app/(publicGroup)/_actions/getProperties";
 import { RentalRequestsList } from "../_components/rental-requests-list";
+import { PaymentHistory } from "../_components/payment-history";
 import type {
   TPayment,
   TProperty,
@@ -79,21 +80,29 @@ const TenantDashboardPage = async () => {
         </Badge>
       </div>
 
-      <div className="mt-8 flex items-center gap-2">
-        <FileText className="size-5 text-primary" />
-        <h2 className="text-lg font-semibold">My Rental Requests</h2>
-        <Badge variant="outline">{requests.length}</Badge>
-      </div>
+      <div className="mt-8 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+        <div>
+          <div className="flex items-center gap-2">
+            <FileText className="size-5 text-primary" />
+            <h2 className="text-lg font-semibold">My Rental Requests</h2>
+            <Badge variant="outline">{requests.length}</Badge>
+          </div>
 
-      <div className="mt-4">
-        <RentalRequestsList
-          requests={requests}
-          properties={propertyMap}
-          reviews={reviewsMap}
-          currentUserId={user.id}
-          paidRequestIds={paidRequestIds}
-          payments={paymentsMap}
-        />
+          <div className="mt-4">
+            <RentalRequestsList
+              requests={requests}
+              properties={propertyMap}
+              reviews={reviewsMap}
+              currentUserId={user.id}
+              paidRequestIds={paidRequestIds}
+              payments={paymentsMap}
+            />
+          </div>
+        </div>
+
+        <aside>
+          <PaymentHistory payments={payments} properties={propertyMap} />
+        </aside>
       </div>
     </div>
   );

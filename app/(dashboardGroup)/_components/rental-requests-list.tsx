@@ -8,6 +8,7 @@ import {
   Eye,
   Loader2,
   MapPin,
+  Star,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -16,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatPrice } from "@/components/property/property-card";
 import { getRentalRequestDetails } from "../_actions/getRentalRequests";
+import { ReviewFormModal } from "./review-form-modal";
 import type { TApproveStatus, TPaymentStatus, TProperty, TRentalRequest } from "@/lib/types";
 
 const approveStatusVariant: Record<
@@ -55,6 +57,10 @@ export function RentalRequestsList({
 }: RentalRequestsListProps) {
   const [pending, startTransition] = useTransition();
   const [details, setDetails] = useState<TRentalRequest | null>(null);
+  const [reviewRequest, setReviewRequest] = useState<TRentalRequest | null>(
+    null
+  );
+  const [reviewedIds, setReviewedIds] = useState<Set<string>>(new Set());
 
   const handleViewDetails = (requestId: string) => {
     startTransition(async () => {
@@ -122,19 +128,32 @@ export function RentalRequestsList({
                     </span>
                   </div>
                 </div>
-                <Button
-                  variant="outline"
-                  className="shrink-0"
-                  onClick={() => handleViewDetails(request.id)}
-                  disabled={pending}
-                >
-                  {pending ? (
-                    <Loader2 className="animate-spin" />
-                  ) : (
-                    <Eye />
-                  )}
-                  Details
-                </Button>
+                <div className="flex shrink-0 gap-2">
+                  {request.approveStatus === "COMPLETED" &&
+                    request.paymentStatus === "PAID" &&
+                    !reviewedIds.has(request.id) && (
+                      <Button
+                        variant="default"
+                        onClick={() => setReviewRequest(request)}
+                        disabled={pending}
+                      >
+                        <Star />
+                        Give Review
+                      </Button>
+                    )}
+                  <Button
+                    variant="outline"
+                    onClick={() => handleViewDetails(request.id)}
+                    disabled={pending}
+                  >
+                    {pending ? (
+                      <Loader2 className="animate-spin" />
+                    ) : (
+                      <Eye />
+                    )}
+                    Details
+                  </Button>
+                </div>
               </div>
             );
           })}
@@ -210,6 +229,19 @@ export function RentalRequestsList({
             </div>
           </div>
         </div>
+      )}
+
+      {reviewRequest && (
+        <ReviewFormModal
+          rentalRequestId={reviewRequest.id}
+          property={properties[reviewRequest.propertyId] ?? null}
+          onClose={() => setReviewRequest(null)}
+          onSuccess={() => {
+            setReviewedIds(
+              (prev) => new Set(prev).add(reviewRequest.id)
+            );
+          }}
+        />
       )}
     </>
   );

@@ -17,9 +17,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatPrice } from "@/components/property/property-card";
 import { getRentalRequestDetails } from "../_actions/getRentalRequests";
+import { createPayment } from "../_actions/paymentActions";
 import { ReviewFormModal } from "./review-form-modal";
 import type {
   TApproveStatus,
+  TPayment,
   TPaymentStatus,
   TProperty,
   TRentalRequest,
@@ -45,6 +47,16 @@ const paymentStatusVariant: Record<
   FAILED: "destructive",
 };
 
+const subscriptionStatusVariant: Record<
+  TPayment["status"],
+  "success" | "warning" | "destructive" | "secondary"
+> = {
+  ACTIVE: "success",
+  INACTIVE: "warning",
+  CANCELLED: "destructive",
+  EXPIRED: "secondary",
+};
+
 const formatDate = (date: string) =>
   new Date(date).toLocaleDateString("en-US", {
     month: "short",
@@ -57,6 +69,8 @@ type RentalRequestsListProps = {
   properties: Record<string, TProperty>;
   reviews?: Record<string, TReview[]>;
   currentUserId?: string;
+  paidRequestIds?: Set<string>;
+  payments?: Record<string, TPayment>;
 };
 
 export function RentalRequestsList({
@@ -64,6 +78,8 @@ export function RentalRequestsList({
   properties,
   reviews = {},
   currentUserId,
+  paidRequestIds = new Set(),
+  payments = {},
 }: RentalRequestsListProps) {
   const [pending, startTransition] = useTransition();
   const [details, setDetails] = useState<TRentalRequest | null>(null);
@@ -71,6 +87,7 @@ export function RentalRequestsList({
     null
   );
   const [reviewedIds, setReviewedIds] = useState<Set<string>>(new Set());
+  const [payingId, setPayingId] = useState<string | null>(null);
 
   const handleViewDetails = (requestId: string) => {
     startTransition(async () => {
@@ -81,6 +98,22 @@ export function RentalRequestsList({
         toast.error(result?.message || "Failed to load request details");
       }
     });
+  };
+
+  const handlePayment = async (requestId: string) => {
+    setPayingId(requestId);
+    try {
+      const result = await createPayment(requestId);
+      if (result?.success && result?.data?.paymentUrl) {
+        window.location.assign(result.data.paymentUrl);
+      } else {
+        toast.error(result?.message || "Failed to start payment");
+        setPayingId(null);
+      }
+    } catch {
+      toast.error("Failed to start payment");
+      setPayingId(null);
+    }
   };
 
   return (
@@ -102,6 +135,7 @@ export function RentalRequestsList({
           {requests.map((request) => {
             const property = properties[request.propertyId];
             const propertyReviews = reviews[request.propertyId] ?? [];
+            const payment = payments[request.id];
             const hasMyReview = currentUserId
               ? propertyReviews.some(
                   (review) => review.userId === currentUserId
@@ -146,6 +180,21 @@ export function RentalRequestsList({
                     </div>
                   </div>
                   <div className="flex shrink-0 gap-2">
+                    {request.approveStatus === "APPROVED" &&
+                      !paidRequestIds.has(request.id) && (
+                        <Button
+                          variant="default"
+                          onClick={() => handlePayment(request.id)}
+                          disabled={payingId === request.id}
+                        >
+                          {payingId === request.id ? (
+                            <Loader2 className="animate-spin" />
+                          ) : (
+                            <CreditCard />
+                          )}
+                          {payingId === request.id ? "Redirecting..." : "Pay"}
+                        </Button>
+                      )}
                     {request.approveStatus === "COMPLETED" &&
                       request.paymentStatus === "PAID" &&
                       !hasMyReview &&
@@ -173,6 +222,35 @@ export function RentalRequestsList({
                     </Button>
                   </div>
                 </div>
+
+                {payment && (
+                  <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-secondary/50 px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                        <CreditCard className="size-4" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">
+                          Subscription payment
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatPrice(payment.amount)}/mo · Paid{" "}
+                          {formatDate(payment.createdAt)}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <Badge
+                        variant={subscriptionStatusVariant[payment.status]}
+                      >
+                        {payment.status}
+                      </Badge>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Renews {formatDate(payment.currentPeriodEnd)}
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 {propertyReviews.length > 0 && (
                   <div className="grid gap-3 border-t pt-4">

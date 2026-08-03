@@ -4,12 +4,18 @@ import { Building2, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { getMe } from "@/service/getMe";
 import { getRentalRequests } from "../_actions/getRentalRequests";
+import { getMyPayments } from "../_actions/paymentActions";
 import {
   getPropertyById,
   getPropertyReviews,
 } from "@/app/(publicGroup)/_actions/getProperties";
 import { RentalRequestsList } from "../_components/rental-requests-list";
-import type { TProperty, TRentalRequest, TReview } from "@/lib/types";
+import type {
+  TPayment,
+  TProperty,
+  TRentalRequest,
+  TReview,
+} from "@/lib/types";
 
 const TenantDashboardPage = async () => {
   const userResult = await getMe();
@@ -25,8 +31,20 @@ const TenantDashboardPage = async () => {
     redirect("/admin-dashboard");
   }
 
-  const requestsResult = await getRentalRequests();
+  const [requestsResult, paymentsResult] = await Promise.all([
+    getRentalRequests(),
+    getMyPayments(),
+  ]);
   const requests: TRentalRequest[] = requestsResult?.data || [];
+
+  const payments: TPayment[] = paymentsResult?.data || [];
+  const paidRequestIds = new Set(
+    payments.map((payment) => payment.rentalRequestId)
+  );
+  const paymentsMap: Record<string, TPayment> = {};
+  payments.forEach((payment) => {
+    paymentsMap[payment.rentalRequestId] = payment;
+  });
 
   const propertyMap: Record<string, TProperty> = {};
   const reviewsMap: Record<string, TReview[]> = {};
@@ -73,6 +91,8 @@ const TenantDashboardPage = async () => {
           properties={propertyMap}
           reviews={reviewsMap}
           currentUserId={user.id}
+          paidRequestIds={paidRequestIds}
+          payments={paymentsMap}
         />
       </div>
     </div>

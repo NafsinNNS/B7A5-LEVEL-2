@@ -1,6 +1,11 @@
 "use server";
 
-import type { TApiResponse, TProperty, TPropertyQuery } from "@/lib/types";
+import type {
+  TApiResponse,
+  TProperty,
+  TPropertyQuery,
+  TReview,
+} from "@/lib/types";
 
 export const getProperties = async (query: TPropertyQuery = {}) => {
   const searchParams = new URLSearchParams();
@@ -46,5 +51,22 @@ export const getPropertyById = async (propertyId: string) => {
       message: "Failed to fetch property",
       data: null,
     } as TApiResponse<TProperty | null>;
+  }
+};
+
+export const getPropertyReviews = async (propertyId: string) => {
+  const url = `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/reviews/property/${propertyId}`;
+
+  try {
+    const res = await fetch(url, { cache: "no-store" });
+    const result = await res.json();
+    return result as TApiResponse<TReview[]>;
+  } catch {
+    return {
+      success: false,
+      statusCode: 500,
+      message: "Failed to fetch reviews",
+      data: [],
+    } as TApiResponse<TReview[]>;
   }
 };

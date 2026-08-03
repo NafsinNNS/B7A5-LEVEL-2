@@ -7,8 +7,11 @@ import {
   Building2,
   Check,
   MapPin,
+  MessageSquareText,
   Ruler,
   ShieldCheck,
+  Star,
+  User,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -22,7 +25,7 @@ import {
   formatPrice,
   getPropertyImage,
 } from "@/components/property/property-card";
-import { getPropertyById } from "../../_actions/getProperties";
+import { getPropertyById, getPropertyReviews } from "../../_actions/getProperties";
 import { getMe } from "@/service/getMe";
 
 type PropertyDetailPageProps = {
@@ -31,9 +34,10 @@ type PropertyDetailPageProps = {
 
 const PropertyDetailPage = async ({ params }: PropertyDetailPageProps) => {
   const { id } = await params;
-  const [result, userResult] = await Promise.all([
+  const [result, userResult, reviewsResult] = await Promise.all([
     getPropertyById(id),
     getMe(),
+    getPropertyReviews(id),
   ]);
 
   const property = result?.success ? result?.data : null;
@@ -43,6 +47,18 @@ const PropertyDetailPage = async ({ params }: PropertyDetailPageProps) => {
   }
 
   const isLoggedIn = userResult?.success && userResult?.data;
+  const reviews = reviewsResult?.success ? reviewsResult.data : [];
+  const averageRating =
+    reviews.length > 0
+      ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
+      : 0;
+
+  const formatDate = (date: string) =>
+    new Date(date).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
@@ -119,6 +135,80 @@ const PropertyDetailPage = async ({ params }: PropertyDetailPageProps) => {
               </div>
             </div>
           )}
+
+          <div className="mt-8">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <MessageSquareText className="size-5 text-primary" />
+                <h2 className="text-xl font-bold">Reviews</h2>
+                {reviews.length > 0 && (
+                  <Badge variant="outline">{reviews.length}</Badge>
+                )}
+              </div>
+              {averageRating > 0 && (
+                <div className="flex items-center gap-1.5 text-sm">
+                  <Star className="size-4 fill-amber-400 text-amber-400" />
+                  <span className="font-semibold">
+                    {averageRating.toFixed(1)}
+                  </span>
+                  <span className="text-muted-foreground">
+                    average rating
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {reviews.length === 0 ? (
+              <div className="mt-4 rounded-2xl border border-dashed bg-card p-10 text-center">
+                <Star className="mx-auto size-10 text-muted-foreground/50" />
+                <p className="mt-3 text-sm text-muted-foreground">
+                  No reviews for this property yet.
+                </p>
+              </div>
+            ) : (
+              <div className="mt-4 grid gap-4">
+                {reviews.map((review) => (
+                  <div
+                    key={review.id}
+                    className="rounded-2xl border bg-card p-5 shadow-sm"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="flex size-9 items-center justify-center rounded-full bg-secondary">
+                          <User className="size-4 text-primary" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold">
+                            {review.user?.name ?? "Tenant"}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {formatDate(review.createdAt)}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-0.5">
+                        {[1, 2, 3, 4, 5].map((value) => (
+                          <Star
+                            key={value}
+                            className={
+                              value <= review.rating
+                                ? "size-4 fill-amber-400 text-amber-400"
+                                : "size-4 text-muted-foreground/40"
+                            }
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    {review.comment && (
+                      <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                        {review.comment}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* ====== Sidebar ====== */}

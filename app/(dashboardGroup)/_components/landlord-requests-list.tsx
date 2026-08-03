@@ -174,9 +174,7 @@ export function LandlordRequestsList({ requests }: LandlordRequestsListProps) {
                     <Button
                       size="sm"
                       variant="outline"
-                      disabled={
-                        isPending || request.approveStatus === "COMPLETED"
-                      }
+                      disabled={isPending}
                       onClick={() =>
                         handleStatusChange(request.id, "COMPLETED")
                       }

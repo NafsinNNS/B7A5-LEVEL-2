@@ -38,6 +38,47 @@ export const getLandlordProperties = async () => {
   }
 };
 
+export const createLandlordProperty = async (payload: {
+  title: string;
+  description: string;
+  price: number;
+  location: string;
+  categoryName?: string;
+  amenities?: string[];
+}) => {
+  const headers = await getAuthHeaders();
+  if (!headers) {
+    return {
+      success: false,
+      statusCode: 401,
+      message: "Not authenticated",
+      data: null,
+    } as TApiResponse<TProperty | null>;
+  }
+
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/landlord/properties`,
+      {
+        method: "POST",
+        headers: { ...headers, "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+        cache: "no-store",
+      }
+    );
+    const result = await res.json();
+    revalidateTag("landlord-properties", "max");
+    return result as TApiResponse<TProperty>;
+  } catch {
+    return {
+      success: false,
+      statusCode: 500,
+      message: "Failed to create property",
+      data: null,
+    } as TApiResponse<TProperty | null>;
+  }
+};
+
 export const updateLandlordProperty = async (
   propertyId: string,
   payload: {

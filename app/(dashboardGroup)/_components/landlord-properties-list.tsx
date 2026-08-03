@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Building2, Loader2, MapPin, Pencil, Trash2 } from "lucide-react";
+import { Building2, Loader2, MapPin, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import {
 } from "@/components/property/property-card";
 import { deleteLandlordProperty } from "../_actions/landlordActions";
 import { PropertyEditModal } from "./property-edit-modal";
+import { PropertyCreateModal } from "./property-create-modal";
 import type { TCategory, TProperty } from "@/lib/types";
 
 type LandlordPropertiesListProps = {
@@ -28,6 +29,7 @@ export function LandlordPropertiesList({
   const router = useRouter();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editing, setEditing] = useState<TProperty | null>(null);
+  const [creating, setCreating] = useState(false);
 
   const handleDelete = async (propertyId: string, title: string) => {
     if (!window.confirm(`Delete "${title}"? This cannot be undone.`)) return;
@@ -53,12 +55,28 @@ export function LandlordPropertiesList({
         <p className="mx-auto mt-2 max-w-sm text-sm text-muted-foreground">
           Your listed properties will appear here.
         </p>
+        <Button className="mt-5" onClick={() => setCreating(true)}>
+          <Plus />
+          Create Property
+        </Button>
+        {creating && (
+          <PropertyCreateModal
+            categories={categories}
+            onClose={() => setCreating(false)}
+          />
+        )}
       </div>
     );
   }
 
   return (
     <>
+      <div className="mb-5 flex justify-end">
+        <Button onClick={() => setCreating(true)}>
+          <Plus />
+          Create Property
+        </Button>
+      </div>
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {properties.map((property) => (
           <div
@@ -128,6 +146,12 @@ export function LandlordPropertiesList({
           property={editing}
           categories={categories}
           onClose={() => setEditing(null)}
+        />
+      )}
+      {creating && (
+        <PropertyCreateModal
+          categories={categories}
+          onClose={() => setCreating(false)}
         />
       )}
     </>

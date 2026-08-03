@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ImageUploadField } from "@/components/property/image-upload-field";
 import { updateLandlordProperty } from "../_actions/landlordActions";
 import type { TCategory, TProperty } from "@/lib/types";
 
@@ -30,6 +31,7 @@ export function PropertyEditModal({
   const [location, setLocation] = useState(property.location);
   const [categoryName, setCategoryName] = useState(property.categoryName);
   const [amenities, setAmenities] = useState(property.amenities.join(", "));
+  const [imageUrl, setImageUrl] = useState(property.imageUrl ?? "");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,6 +47,7 @@ export function PropertyEditModal({
           .split(",")
           .map((item) => item.trim())
           .filter(Boolean),
+        imageUrl: imageUrl || undefined,
       });
       if (result?.success) {
         toast.success("Property updated successfully");
@@ -147,6 +150,11 @@ export function PropertyEditModal({
               placeholder="2 Bedrooms, 1 Bathroom, Balcony..."
             />
           </div>
+          <ImageUploadField
+            id={`img-${property.id}`}
+            value={imageUrl}
+            onChange={setImageUrl}
+          />
           <div className="mt-2 flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel

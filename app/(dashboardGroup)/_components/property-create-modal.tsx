@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ImageUploadField } from "@/components/property/image-upload-field";
 import { createLandlordProperty } from "../_actions/landlordActions";
 import type { TCategory } from "@/lib/types";
 
@@ -30,6 +31,7 @@ export function PropertyCreateModal({
     categories[0]?.name ?? ""
   );
   const [amenities, setAmenities] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,6 +47,7 @@ export function PropertyCreateModal({
           .split(",")
           .map((item) => item.trim())
           .filter(Boolean),
+        imageUrl: imageUrl || undefined,
       });
       if (result?.success) {
         toast.success("Property created successfully");
@@ -150,6 +153,7 @@ export function PropertyCreateModal({
               placeholder="2 Bedrooms, 1 Bathroom, Balcony..."
             />
           </div>
+          <ImageUploadField id="new-img" value={imageUrl} onChange={setImageUrl} />
           <div className="mt-2 flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel

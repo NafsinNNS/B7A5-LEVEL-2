@@ -1,17 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Building2, Loader2, MapPin, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  formatPrice,
-  getPropertyImage,
-} from "@/components/property/property-card";
+import { formatPrice } from "@/components/property/property-card";
+import { PropertyImage } from "@/components/property/property-image";
 import { deleteLandlordProperty } from "../_actions/landlordActions";
 import { PropertyEditModal } from "./property-edit-modal";
 import { PropertyCreateModal } from "./property-create-modal";
@@ -84,12 +81,9 @@ export function LandlordPropertiesList({
             className="overflow-hidden rounded-2xl border bg-card shadow-sm"
           >
             <div className="relative aspect-[4/3]">
-              <Image
-                src={getPropertyImage(property.id)}
+              <PropertyImage
+                src={property.imageUrl}
                 alt={property.title}
-                fill
-                unoptimized
-                className="object-cover"
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
               />
               <Badge

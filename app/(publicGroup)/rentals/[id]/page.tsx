@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -21,10 +20,8 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { RentalRequestButton } from "@/components/property/rental-request-button";
-import {
-  formatPrice,
-  getPropertyImage,
-} from "@/components/property/property-card";
+import { formatPrice } from "@/components/property/property-card";
+import { PropertyImage } from "@/components/property/property-image";
 import { getPropertyById, getPropertyReviews } from "../../_actions/getProperties";
 import { getMe } from "@/service/getMe";
 
@@ -74,12 +71,9 @@ const PropertyDetailPage = async ({ params }: PropertyDetailPageProps) => {
         {/* ====== Main column ====== */}
         <div>
           <div className="relative aspect-[16/9] overflow-hidden rounded-3xl shadow-md">
-            <Image
-              src={getPropertyImage(property.id)}
+            <PropertyImage
+              src={property.imageUrl}
               alt={property.title}
-              fill
-              unoptimized
-              className="object-cover"
               sizes="(max-width: 1024px) 100vw, 60vw"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />

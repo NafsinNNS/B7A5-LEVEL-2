@@ -45,6 +45,7 @@ export const createLandlordProperty = async (payload: {
   location: string;
   categoryName?: string;
   amenities?: string[];
+  imageUrl?: string;
 }) => {
   const headers = await getAuthHeaders();
   if (!headers) {
@@ -88,6 +89,7 @@ export const updateLandlordProperty = async (
     location?: string;
     categoryName?: string;
     amenities?: string[];
+    imageUrl?: string;
   }
 ) => {
   const headers = await getAuthHeaders();

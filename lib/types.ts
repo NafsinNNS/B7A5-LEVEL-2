@@ -42,6 +42,7 @@ export type TProperty = {
   amenities: string[];
   categoryName: string;
   isAvailable: boolean;
+  imageUrl?: string | null;
   landlordId: string;
   createdAt: string;
   updatedAt: string;

@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import {
   Building2,
@@ -11,10 +10,8 @@ import {
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import {
-  formatPrice,
-  getPropertyImage,
-} from "@/components/property/property-card";
+import { formatPrice } from "@/components/property/property-card";
+import { PropertyImage } from "@/components/property/property-image";
 import type { TProperty } from "@/lib/types";
 
 const formatDate = (date: string) =>
@@ -46,14 +43,11 @@ export function AdminPropertiesList({
               className="overflow-hidden rounded-2xl border bg-card shadow-sm"
             >
               <div className="relative aspect-[4/3]">
-                <Image
-                  src={getPropertyImage(property.id)}
-                  alt={property.title}
-                  fill
-                  unoptimized
-                  className="object-cover"
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                />
+                  <PropertyImage
+                    src={property.imageUrl}
+                    alt={property.title}
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  />
                 <Badge
                   variant={property.isAvailable ? "success" : "destructive"}
                   className="absolute right-3 top-3"

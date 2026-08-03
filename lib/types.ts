@@ -7,6 +7,13 @@ export type TApiResponse<T> = {
   error?: unknown;
 };
 
+export type TPaginationMeta = {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+};
+
 export type TRole = "TENANT" | "LANDLORD" | "ADMIN";
 
 export type TUser = {

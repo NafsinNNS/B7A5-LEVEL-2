@@ -5,6 +5,7 @@ import { revalidateTag } from "next/cache";
 import type {
   TApiResponse,
   TCategory,
+  TPaginationMeta,
   TProperty,
   TRentalRequest,
   TUser,
@@ -16,31 +17,49 @@ const getAuthHeaders = async () => {
   return accessToken ? { Cookie: `accessToken=${accessToken}` } : null;
 };
 
-export const getAllUsers = async () => {
+export type GetAdminUsersParams = {
+  searchTerm?: string;
+  page?: number;
+  limit?: number;
+};
+
+export type TAdminUsersData = {
+  users: TUser[];
+  meta: TPaginationMeta;
+};
+
+export const getAdminUsers = async (params: GetAdminUsersParams = {}) => {
   const headers = await getAuthHeaders();
   if (!headers) {
     return {
       success: false,
       statusCode: 401,
       message: "Not authenticated",
-      data: [],
-    } as TApiResponse<TUser[]>;
+      data: { users: [], meta: { page: 1, limit: 10, total: 0, totalPages: 0 } },
+    } as TApiResponse<TAdminUsersData>;
   }
+
+  const searchParams = new URLSearchParams();
+  if (params.searchTerm) searchParams.set("searchTerm", params.searchTerm);
+  if (params.page) searchParams.set("page", String(params.page));
+  if (params.limit) searchParams.set("limit", String(params.limit));
 
   try {
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/admin/users`,
+      `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/admin/users${
+        searchParams.toString() ? `?${searchParams.toString()}` : ""
+      }`,
       { headers, cache: "no-store" }
     );
     const result = await res.json();
-    return result as TApiResponse<TUser[]>;
+    return result as TApiResponse<TAdminUsersData>;
   } catch {
     return {
       success: false,
       statusCode: 500,
       message: "Failed to fetch users",
-      data: [],
-    } as TApiResponse<TUser[]>;
+      data: { users: [], meta: { page: 1, limit: 10, total: 0, totalPages: 0 } },
+    } as TApiResponse<TAdminUsersData>;
   }
 };
 

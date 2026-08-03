@@ -17,6 +17,7 @@ import type {
 
 type AdminTabsProps = {
   users: TUser[];
+  totalUsers: number;
   properties: TProperty[];
   rentalRequests: TRentalRequest[];
   categories: TCategory[];
@@ -27,6 +28,7 @@ type Tab = "users" | "properties" | "rentals" | "categories";
 
 export function AdminTabs({
   users,
+  totalUsers,
   properties,
   rentalRequests,
   categories,
@@ -42,7 +44,7 @@ export function AdminTabs({
   };
 
   const counts: Record<Tab, number> = {
-    users: users.length,
+    users: totalUsers,
     properties: properties.length,
     rentals: rentalRequests.length,
     categories: categories.length,
@@ -83,7 +85,11 @@ export function AdminTabs({
 
       <div className="mt-4">
         {tab === "users" && (
-          <UsersList users={users} currentUserId={currentUserId} />
+          <UsersList
+            initialUsers={users}
+            totalUsers={totalUsers}
+            currentUserId={currentUserId}
+          />
         )}
         {tab === "properties" && (
           <AdminPropertiesList properties={properties} />

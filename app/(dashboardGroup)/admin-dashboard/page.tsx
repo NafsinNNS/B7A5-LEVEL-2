@@ -11,7 +11,7 @@ import { StatCard } from "@/components/dashboard/stat-card";
 import { getMe } from "@/service/getMe";
 import { getCategories } from "@/app/(publicGroup)/_actions/getCategories";
 import {
-  getAllUsers,
+  getAdminUsers,
   getAllProperties,
   getAllRentalRequests,
 } from "../_actions/adminActions";
@@ -39,13 +39,14 @@ const AdminDashboardPage = async () => {
 
   const [usersResult, propertiesResult, rentalRequestsResult, categoriesResult] =
     await Promise.all([
-      getAllUsers(),
+      getAdminUsers({ page: 1, limit: 10 }),
       getAllProperties(),
       getAllRentalRequests(),
       getCategories(),
     ]);
 
-  const users: TUser[] = usersResult?.data || [];
+  const users: TUser[] = usersResult?.data?.users || [];
+  const totalUsers = usersResult?.data?.meta?.total ?? users.length;
   const properties: TProperty[] = propertiesResult?.data || [];
   const rentalRequests: TRentalRequest[] = rentalRequestsResult?.data || [];
   const categories: TCategory[] = categoriesResult?.data || [];
@@ -78,8 +79,8 @@ const AdminDashboardPage = async () => {
         <StatCard
           icon={Users}
           label="Total Users"
-          value={users.length}
-          hint={`${users.filter((user) => user.role === "TENANT").length} tenants`}
+          value={totalUsers}
+          hint={`${users.filter((user) => user.role === "TENANT").length} tenants on page`}
         />
         <StatCard
           icon={Building2}
@@ -104,6 +105,7 @@ const AdminDashboardPage = async () => {
       <div className="mt-8">
         <AdminTabs
           users={users}
+          totalUsers={totalUsers}
           properties={properties}
           rentalRequests={rentalRequests}
           categories={categories}

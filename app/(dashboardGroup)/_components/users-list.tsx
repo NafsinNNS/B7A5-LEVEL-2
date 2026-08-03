@@ -1,13 +1,16 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   Ban,
   CalendarDays,
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
   Loader2,
   Mail,
+  Search,
   ShieldCheck,
   User,
   Users,
@@ -16,7 +19,8 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { updateUserStatus } from "../_actions/adminActions";
+import { Input } from "@/components/ui/input";
+import { getAdminUsers, updateUserStatus } from "../_actions/adminActions";
 import type { TRole, TUser } from "@/lib/types";
 
 const roleVariant: Record<TRole, "default" | "secondary" | "warning"> = {
@@ -32,15 +36,59 @@ const formatDate = (date: string) =>
     year: "numeric",
   });
 
+const PAGE_SIZE = 10;
+
 type UsersListProps = {
-  users: TUser[];
+  initialUsers: TUser[];
+  totalUsers: number;
   currentUserId: string;
 };
 
-export function UsersList({ users, currentUserId }: UsersListProps) {
+export function UsersList({
+  initialUsers,
+  totalUsers,
+  currentUserId,
+}: UsersListProps) {
   const router = useRouter();
+  const [users, setUsers] = useState<TUser[]>(initialUsers);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedTerm, setDebouncedTerm] = useState("");
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(totalUsers);
+  const [totalPages, setTotalPages] = useState(
+    Math.max(1, Math.ceil(totalUsers / PAGE_SIZE))
+  );
   const [pendingUserId, setPendingUserId] = useState<string | null>(null);
-  const [, startTransition] = useTransition();
+  const [loading, startTransition] = useTransition();
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      setDebouncedTerm(searchTerm);
+      setPage(1);
+    }, 400);
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [searchTerm]);
+
+  useEffect(() => {
+    startTransition(async () => {
+      const result = await getAdminUsers({
+        searchTerm: debouncedTerm || undefined,
+        page,
+        limit: PAGE_SIZE,
+      });
+      if (result?.success) {
+        setUsers(result.data.users);
+        setTotal(result.data.meta.total);
+        setTotalPages(Math.max(1, result.data.meta.totalPages));
+      } else {
+        toast.error(result?.message || "Failed to load users");
+      }
+    });
+  }, [debouncedTerm, page]);
 
   const handleToggleStatus = (user: TUser) => {
     const nextStatus =
@@ -60,6 +108,13 @@ export function UsersList({ users, currentUserId }: UsersListProps) {
       setPendingUserId(null);
       if (result?.success) {
         toast.success(`${user.name} marked as ${nextStatus.toLowerCase()}`);
+        setUsers((prev) =>
+          prev.map((u) =>
+            u.id === user.id
+              ? { ...u, activeStatus: nextStatus }
+              : u
+          )
+        );
         router.refresh();
       } else {
         toast.error(result?.message || "Failed to update user status");
@@ -67,15 +122,45 @@ export function UsersList({ users, currentUserId }: UsersListProps) {
     });
   };
 
+  const from = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+  const to = Math.min(page * PAGE_SIZE, total);
+
   return (
     <>
-      {users.length === 0 ? (
-        <div className="rounded-2xl border border-dashed bg-card p-16 text-center">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative w-full max-w-xs">
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search by name or email..."
+            className="pl-9"
+          />
+        </div>
+        <p className="text-sm text-muted-foreground">
+          {from}–{to} of {total} users
+        </p>
+      </div>
+
+      {loading ? (
+        <div className="mt-4 grid gap-4">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div
+              key={index}
+              className="h-20 animate-pulse rounded-2xl border bg-card p-5 shadow-sm"
+            />
+          ))}
+        </div>
+      ) : users.length === 0 ? (
+        <div className="mt-4 rounded-2xl border border-dashed bg-card p-16 text-center">
           <Users className="mx-auto size-12 text-muted-foreground/50" />
           <h3 className="mt-4 text-lg font-semibold">No users found</h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Try a different search term.
+          </p>
         </div>
       ) : (
-        <div className="grid gap-4">
+        <div className="mt-4 grid gap-4">
           {users.map((user) => {
             const isPending = pendingUserId === user.id;
             const isSelf = user.id === currentUserId;
@@ -101,9 +186,7 @@ export function UsersList({ users, currentUserId }: UsersListProps) {
                       >
                         {user.activeStatus}
                       </Badge>
-                      {isSelf && (
-                        <Badge variant="outline">You</Badge>
-                      )}
+                      {isSelf && <Badge variant="outline">You</Badge>}
                     </div>
                     <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
                       <span className="flex items-center gap-1.5">
@@ -145,6 +228,32 @@ export function UsersList({ users, currentUserId }: UsersListProps) {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {totalPages > 1 && (
+        <div className="mt-6 flex items-center justify-center gap-3">
+          <Button
+            variant="outline"
+            size="icon"
+            disabled={page <= 1 || loading}
+            onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+            aria-label="Previous page"
+          >
+            <ChevronLeft />
+          </Button>
+          <span className="text-sm text-muted-foreground">
+            Page {page} of {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            size="icon"
+            disabled={page >= totalPages || loading}
+            onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+            aria-label="Next page"
+          >
+            <ChevronRight />
+          </Button>
         </div>
       )}
     </>

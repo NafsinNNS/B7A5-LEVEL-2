@@ -1,46 +1,51 @@
 "use client";
 
 import { useState } from "react";
-import { Building2, CreditCard, Users } from "lucide-react";
+import { Building2, CreditCard, Tags, Users } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { UsersList } from "./users-list";
 import { AdminPropertiesList } from "./admin-properties-list";
 import { AdminRentalRequestsList } from "./admin-rental-requests-list";
-import type { TProperty, TRentalRequest, TUser } from "@/lib/types";
+import { AdminCategories } from "./admin-categories";
+import type {
+  TCategory,
+  TProperty,
+  TRentalRequest,
+  TUser,
+} from "@/lib/types";
 
 type AdminTabsProps = {
   users: TUser[];
   properties: TProperty[];
   rentalRequests: TRentalRequest[];
+  categories: TCategory[];
   currentUserId: string;
 };
 
-type Tab = "users" | "properties" | "rentals";
+type Tab = "users" | "properties" | "rentals" | "categories";
 
 export function AdminTabs({
   users,
   properties,
   rentalRequests,
+  categories,
   currentUserId,
 }: AdminTabsProps) {
   const [tab, setTab] = useState<Tab>("users");
 
-  const tabMeta: Record<
-    Tab,
-    { label: string; icon: typeof Users; count: number }
-  > = {
-    users: { label: "Users", icon: Users, count: users.length },
-    properties: {
-      label: "Properties",
-      icon: Building2,
-      count: properties.length,
-    },
-    rentals: {
-      label: "Rentals",
-      icon: CreditCard,
-      count: rentalRequests.length,
-    },
+  const tabMeta: Record<Tab, { label: string; icon: typeof Users }> = {
+    users: { label: "Users", icon: Users },
+    properties: { label: "Properties", icon: Building2 },
+    rentals: { label: "Rentals", icon: CreditCard },
+    categories: { label: "Categories", icon: Tags },
+  };
+
+  const counts: Record<Tab, number> = {
+    users: users.length,
+    properties: properties.length,
+    rentals: rentalRequests.length,
+    categories: categories.length,
   };
 
   const active = tabMeta[tab];
@@ -51,7 +56,7 @@ export function AdminTabs({
         <div className="flex items-center gap-2">
           <active.icon className="size-5 text-primary" />
           <h2 className="text-lg font-semibold">All {active.label}</h2>
-          <Badge variant="outline">{active.count}</Badge>
+          <Badge variant="outline">{counts[tab]}</Badge>
         </div>
         <div className="inline-flex rounded-lg border bg-card p-1 shadow-sm">
           {(Object.keys(tabMeta) as Tab[]).map((key) => {
@@ -86,6 +91,7 @@ export function AdminTabs({
         {tab === "rentals" && (
           <AdminRentalRequestsList requests={rentalRequests} />
         )}
+        {tab === "categories" && <AdminCategories categories={categories} />}
       </div>
     </div>
   );

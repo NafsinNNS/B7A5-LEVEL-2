@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { revalidateTag } from "next/cache";
 import type {
   TApiResponse,
+  TCategory,
   TProperty,
   TRentalRequest,
   TUser,
@@ -133,5 +134,39 @@ export const getAllRentalRequests = async () => {
       message: "Failed to fetch rental requests",
       data: [],
     } as TApiResponse<TRentalRequest[]>;
+  }
+};
+
+export const createCategory = async (name: string) => {
+  const headers = await getAuthHeaders();
+  if (!headers) {
+    return {
+      success: false,
+      statusCode: 401,
+      message: "Not authenticated",
+      data: null,
+    } as TApiResponse<TCategory | null>;
+  }
+
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/admin/create-category`,
+      {
+        method: "POST",
+        headers: { ...headers, "Content-Type": "application/json" },
+        body: JSON.stringify({ name }),
+        cache: "no-store",
+      }
+    );
+    const result = await res.json();
+    revalidateTag("categories", "max");
+    return result as TApiResponse<TCategory>;
+  } catch {
+    return {
+      success: false,
+      statusCode: 500,
+      message: "Failed to create category",
+      data: null,
+    } as TApiResponse<TCategory | null>;
   }
 };

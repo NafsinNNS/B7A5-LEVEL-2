@@ -3,13 +3,19 @@ import { ShieldCheck } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { getMe } from "@/service/getMe";
+import { getCategories } from "@/app/(publicGroup)/_actions/getCategories";
 import {
   getAllUsers,
   getAllProperties,
   getAllRentalRequests,
 } from "../_actions/adminActions";
 import { AdminTabs } from "../_components/admin-tabs";
-import type { TProperty, TRentalRequest, TUser } from "@/lib/types";
+import type {
+  TCategory,
+  TProperty,
+  TRentalRequest,
+  TUser,
+} from "@/lib/types";
 
 const AdminDashboardPage = async () => {
   const userResult = await getMe();
@@ -25,16 +31,18 @@ const AdminDashboardPage = async () => {
     redirect("/landlord-dashboard");
   }
 
-  const [usersResult, propertiesResult, rentalRequestsResult] =
+  const [usersResult, propertiesResult, rentalRequestsResult, categoriesResult] =
     await Promise.all([
       getAllUsers(),
       getAllProperties(),
       getAllRentalRequests(),
+      getCategories(),
     ]);
 
   const users: TUser[] = usersResult?.data || [];
   const properties: TProperty[] = propertiesResult?.data || [];
   const rentalRequests: TRentalRequest[] = rentalRequestsResult?.data || [];
+  const categories: TCategory[] = categoriesResult?.data || [];
 
   return (
     <div>
@@ -58,6 +66,7 @@ const AdminDashboardPage = async () => {
           users={users}
           properties={properties}
           rentalRequests={rentalRequests}
+          categories={categories}
           currentUserId={user.id}
         />
       </div>

@@ -3,9 +3,13 @@ import { ShieldCheck } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { getMe } from "@/service/getMe";
-import { getAllUsers, getAllProperties } from "../_actions/adminActions";
+import {
+  getAllUsers,
+  getAllProperties,
+  getAllRentalRequests,
+} from "../_actions/adminActions";
 import { AdminTabs } from "../_components/admin-tabs";
-import type { TProperty, TUser } from "@/lib/types";
+import type { TProperty, TRentalRequest, TUser } from "@/lib/types";
 
 const AdminDashboardPage = async () => {
   const userResult = await getMe();
@@ -21,13 +25,16 @@ const AdminDashboardPage = async () => {
     redirect("/landlord-dashboard");
   }
 
-  const [usersResult, propertiesResult] = await Promise.all([
-    getAllUsers(),
-    getAllProperties(),
-  ]);
+  const [usersResult, propertiesResult, rentalRequestsResult] =
+    await Promise.all([
+      getAllUsers(),
+      getAllProperties(),
+      getAllRentalRequests(),
+    ]);
 
   const users: TUser[] = usersResult?.data || [];
   const properties: TProperty[] = propertiesResult?.data || [];
+  const rentalRequests: TRentalRequest[] = rentalRequestsResult?.data || [];
 
   return (
     <div>
@@ -50,6 +57,7 @@ const AdminDashboardPage = async () => {
         <AdminTabs
           users={users}
           properties={properties}
+          rentalRequests={rentalRequests}
           currentUserId={user.id}
         />
       </div>

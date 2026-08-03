@@ -2,7 +2,12 @@
 
 import { cookies } from "next/headers";
 import { revalidateTag } from "next/cache";
-import type { TApiResponse, TProperty, TUser } from "@/lib/types";
+import type {
+  TApiResponse,
+  TProperty,
+  TRentalRequest,
+  TUser,
+} from "@/lib/types";
 
 const getAuthHeaders = async () => {
   const cookieStore = await cookies();
@@ -100,5 +105,33 @@ export const getAllProperties = async () => {
       message: "Failed to fetch properties",
       data: [],
     } as TApiResponse<TProperty[]>;
+  }
+};
+
+export const getAllRentalRequests = async () => {
+  const headers = await getAuthHeaders();
+  if (!headers) {
+    return {
+      success: false,
+      statusCode: 401,
+      message: "Not authenticated",
+      data: [],
+    } as TApiResponse<TRentalRequest[]>;
+  }
+
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/admin/rentals`,
+      { headers, cache: "no-store" }
+    );
+    const result = await res.json();
+    return result as TApiResponse<TRentalRequest[]>;
+  } catch {
+    return {
+      success: false,
+      statusCode: 500,
+      message: "Failed to fetch rental requests",
+      data: [],
+    } as TApiResponse<TRentalRequest[]>;
   }
 };

@@ -18,7 +18,13 @@ import { Badge } from "@/components/ui/badge";
 import { formatPrice } from "@/components/property/property-card";
 import { getRentalRequestDetails } from "../_actions/getRentalRequests";
 import { ReviewFormModal } from "./review-form-modal";
-import type { TApproveStatus, TPaymentStatus, TProperty, TRentalRequest } from "@/lib/types";
+import type {
+  TApproveStatus,
+  TPaymentStatus,
+  TProperty,
+  TRentalRequest,
+  TReview,
+} from "@/lib/types";
 
 const approveStatusVariant: Record<
   TApproveStatus,
@@ -49,11 +55,15 @@ const formatDate = (date: string) =>
 type RentalRequestsListProps = {
   requests: TRentalRequest[];
   properties: Record<string, TProperty>;
+  reviews?: Record<string, TReview[]>;
+  currentUserId?: string;
 };
 
 export function RentalRequestsList({
   requests,
   properties,
+  reviews = {},
+  currentUserId,
 }: RentalRequestsListProps) {
   const [pending, startTransition] = useTransition();
   const [details, setDetails] = useState<TRentalRequest | null>(null);
@@ -91,69 +101,115 @@ export function RentalRequestsList({
         <div className="grid gap-4">
           {requests.map((request) => {
             const property = properties[request.propertyId];
+            const propertyReviews = reviews[request.propertyId] ?? [];
+            const hasMyReview = currentUserId
+              ? propertyReviews.some(
+                  (review) => review.userId === currentUserId
+                )
+              : false;
             return (
               <div
                 key={request.id}
-                className="flex flex-col gap-4 rounded-2xl border bg-card p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between"
+                className="flex flex-col gap-4 rounded-2xl border bg-card p-5 shadow-sm"
               >
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="truncate font-semibold">
-                      {property?.title ?? "Property"}
-                    </h3>
-                    <Badge variant={approveStatusVariant[request.approveStatus]}>
-                      {request.approveStatus}
-                    </Badge>
-                    <Badge variant={paymentStatusVariant[request.paymentStatus]}>
-                      {request.paymentStatus === "UNPAID"
-                        ? "Unpaid"
-                        : request.paymentStatus}
-                    </Badge>
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="truncate font-semibold">
+                        {property?.title ?? "Property"}
+                      </h3>
+                      <Badge variant={approveStatusVariant[request.approveStatus]}>
+                        {request.approveStatus}
+                      </Badge>
+                      <Badge variant={paymentStatusVariant[request.paymentStatus]}>
+                        {request.paymentStatus === "UNPAID"
+                          ? "Unpaid"
+                          : request.paymentStatus}
+                      </Badge>
+                    </div>
+                    <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                      {property && (
+                        <>
+                          <span className="flex items-center gap-1.5">
+                            <MapPin className="size-3.5 text-primary" />
+                            {property.location}
+                          </span>
+                          <span className="font-medium text-foreground">
+                            {formatPrice(property.price)}/mo
+                          </span>
+                        </>
+                      )}
+                      <span className="flex items-center gap-1.5">
+                        <CalendarDays className="size-3.5 text-primary" />
+                        Requested {formatDate(request.createdAt)}
+                      </span>
+                    </div>
                   </div>
-                  <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                    {property && (
-                      <>
-                        <span className="flex items-center gap-1.5">
-                          <MapPin className="size-3.5 text-primary" />
-                          {property.location}
-                        </span>
-                        <span className="font-medium text-foreground">
-                          {formatPrice(property.price)}/mo
-                        </span>
-                      </>
-                    )}
-                    <span className="flex items-center gap-1.5">
-                      <CalendarDays className="size-3.5 text-primary" />
-                      Requested {formatDate(request.createdAt)}
-                    </span>
+                  <div className="flex shrink-0 gap-2">
+                    {request.approveStatus === "COMPLETED" &&
+                      request.paymentStatus === "PAID" &&
+                      !hasMyReview &&
+                      !reviewedIds.has(request.id) && (
+                        <Button
+                          variant="default"
+                          onClick={() => setReviewRequest(request)}
+                          disabled={pending}
+                        >
+                          <Star />
+                          Give Review
+                        </Button>
+                      )}
+                    <Button
+                      variant="outline"
+                      onClick={() => handleViewDetails(request.id)}
+                      disabled={pending}
+                    >
+                      {pending ? (
+                        <Loader2 className="animate-spin" />
+                      ) : (
+                        <Eye />
+                      )}
+                      Details
+                    </Button>
                   </div>
                 </div>
-                <div className="flex shrink-0 gap-2">
-                  {request.approveStatus === "COMPLETED" &&
-                    request.paymentStatus === "PAID" &&
-                    !reviewedIds.has(request.id) && (
-                      <Button
-                        variant="default"
-                        onClick={() => setReviewRequest(request)}
-                        disabled={pending}
+
+                {propertyReviews.length > 0 && (
+                  <div className="grid gap-3 border-t pt-4">
+                    {propertyReviews.map((review) => (
+                      <div
+                        key={review.id}
+                        className="flex flex-col gap-2 rounded-xl bg-secondary/50 px-4 py-3"
                       >
-                        <Star />
-                        Give Review
-                      </Button>
-                    )}
-                  <Button
-                    variant="outline"
-                    onClick={() => handleViewDetails(request.id)}
-                    disabled={pending}
-                  >
-                    {pending ? (
-                      <Loader2 className="animate-spin" />
-                    ) : (
-                      <Eye />
-                    )}
-                    Details
-                  </Button>
-                </div>
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <span className="text-sm font-medium">
+                            {review.user?.name ?? "Tenant"}
+                          </span>
+                          <div className="flex items-center gap-0.5">
+                            {[1, 2, 3, 4, 5].map((value) => (
+                              <Star
+                                key={value}
+                                className={
+                                  value <= review.rating
+                                    ? "size-3.5 fill-amber-400 text-amber-400"
+                                    : "size-3.5 text-muted-foreground/40"
+                                }
+                              />
+                            ))}
+                          </div>
+                        </div>
+                        {review.comment && (
+                          <p className="text-sm leading-relaxed text-muted-foreground">
+                            {review.comment}
+                          </p>
+                        )}
+                        <span className="text-xs text-muted-foreground">
+                          {formatDate(review.createdAt)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             );
           })}

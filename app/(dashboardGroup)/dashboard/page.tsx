@@ -4,9 +4,12 @@ import { Building2, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { getMe } from "@/service/getMe";
 import { getRentalRequests } from "../_actions/getRentalRequests";
-import { getPropertyById } from "@/app/(publicGroup)/_actions/getProperties";
+import {
+  getPropertyById,
+  getPropertyReviews,
+} from "@/app/(publicGroup)/_actions/getProperties";
 import { RentalRequestsList } from "../_components/rental-requests-list";
-import type { TProperty, TRentalRequest } from "@/lib/types";
+import type { TProperty, TRentalRequest, TReview } from "@/lib/types";
 
 const TenantDashboardPage = async () => {
   const userResult = await getMe();
@@ -26,11 +29,17 @@ const TenantDashboardPage = async () => {
   const requests: TRentalRequest[] = requestsResult?.data || [];
 
   const propertyMap: Record<string, TProperty> = {};
+  const reviewsMap: Record<string, TReview[]> = {};
+  const propertyIds = [...new Set(requests.map((r) => r.propertyId))];
   await Promise.all(
-    requests.map(async (request) => {
-      const propertyResult = await getPropertyById(request.propertyId);
+    propertyIds.map(async (propertyId) => {
+      const propertyResult = await getPropertyById(propertyId);
       if (propertyResult?.success && propertyResult?.data) {
-        propertyMap[request.propertyId] = propertyResult.data;
+        propertyMap[propertyId] = propertyResult.data;
+      }
+      const reviewsResult = await getPropertyReviews(propertyId);
+      if (reviewsResult?.success) {
+        reviewsMap[propertyId] = reviewsResult.data || [];
       }
     })
   );
@@ -59,7 +68,12 @@ const TenantDashboardPage = async () => {
       </div>
 
       <div className="mt-4">
-        <RentalRequestsList requests={requests} properties={propertyMap} />
+        <RentalRequestsList
+          requests={requests}
+          properties={propertyMap}
+          reviews={reviewsMap}
+          currentUserId={user.id}
+        />
       </div>
     </div>
   );

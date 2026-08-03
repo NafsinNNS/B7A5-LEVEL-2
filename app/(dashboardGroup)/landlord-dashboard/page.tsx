@@ -3,8 +3,6 @@ import {
   Banknote,
   Building2,
   CircleCheck,
-  FileText,
-  Inbox,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -12,13 +10,18 @@ import { formatPrice } from "@/components/property/property-card";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { getMe } from "@/service/getMe";
 import { getCategories } from "@/app/(publicGroup)/_actions/getCategories";
+import { getPropertyReviews } from "@/app/(publicGroup)/_actions/getProperties";
 import {
   getLandlordProperties,
   getLandlordRequests,
 } from "../_actions/landlordActions";
-import { LandlordPropertiesList } from "../_components/landlord-properties-list";
-import { LandlordRequestsList } from "../_components/landlord-requests-list";
-import type { TCategory, TProperty, TRentalRequest } from "@/lib/types";
+import { LandlordTabs } from "../_components/landlord-tabs";
+import type {
+  TCategory,
+  TProperty,
+  TRentalRequest,
+  TReview,
+} from "@/lib/types";
 
 const LandlordDashboardPage = async () => {
   const userResult = await getMe();
@@ -44,6 +47,16 @@ const LandlordDashboardPage = async () => {
   const properties: TProperty[] = propertiesResult?.data || [];
   const categories: TCategory[] = categoriesResult?.data || [];
   const requests: TRentalRequest[] = requestsResult?.data || [];
+
+  const reviewsMap: Record<string, TReview[]> = {};
+  await Promise.all(
+    properties.map(async (property) => {
+      const reviewsResult = await getPropertyReviews(property.id);
+      if (reviewsResult?.success) {
+        reviewsMap[property.id] = reviewsResult.data || [];
+      }
+    })
+  );
 
   const activeRequests = requests.filter(
     (request) => request.approveStatus === "APPROVED"
@@ -94,25 +107,13 @@ const LandlordDashboardPage = async () => {
         />
       </div>
 
-      <div className="mt-8 flex items-center gap-2">
-        <FileText className="size-5 text-primary" />
-        <h2 className="text-lg font-semibold">My Properties</h2>
-        <Badge variant="outline">{properties.length}</Badge>
-      </div>
-      <div className="mt-4">
-        <LandlordPropertiesList
+      <div className="mt-8">
+        <LandlordTabs
           properties={properties}
           categories={categories}
+          requests={requests}
+          reviewsMap={reviewsMap}
         />
-      </div>
-
-      <div className="mt-10 flex items-center gap-2">
-        <Inbox className="size-5 text-primary" />
-        <h2 className="text-lg font-semibold">Rental Requests</h2>
-        <Badge variant="outline">{requests.length}</Badge>
-      </div>
-      <div className="mt-4">
-        <LandlordRequestsList requests={requests} />
       </div>
     </div>
   );

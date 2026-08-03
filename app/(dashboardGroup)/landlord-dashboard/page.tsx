@@ -1,7 +1,15 @@
 import { redirect } from "next/navigation";
-import { Building2, FileText, Inbox } from "lucide-react";
+import {
+  Banknote,
+  Building2,
+  CircleCheck,
+  FileText,
+  Inbox,
+} from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { formatPrice } from "@/components/property/property-card";
+import { StatCard } from "@/components/dashboard/stat-card";
 import { getMe } from "@/service/getMe";
 import { getCategories } from "@/app/(publicGroup)/_actions/getCategories";
 import {
@@ -37,6 +45,17 @@ const LandlordDashboardPage = async () => {
   const categories: TCategory[] = categoriesResult?.data || [];
   const requests: TRentalRequest[] = requestsResult?.data || [];
 
+  const activeRequests = requests.filter(
+    (request) => request.approveStatus === "APPROVED"
+  );
+  const paidRequests = requests.filter(
+    (request) => request.paymentStatus === "PAID"
+  );
+  const earnings = paidRequests.reduce(
+    (total, request) => total + (request.property?.price ?? 0),
+    0
+  );
+
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -52,6 +71,27 @@ const LandlordDashboardPage = async () => {
           <Building2 className="size-4" />
           {user.role}
         </Badge>
+      </div>
+
+      <div className="mt-8 grid gap-4 sm:grid-cols-3">
+        <StatCard
+          icon={Building2}
+          label="Total Properties"
+          value={properties.length}
+          hint={`${properties.filter((property) => property.isAvailable).length} available`}
+        />
+        <StatCard
+          icon={CircleCheck}
+          label="Active Requests"
+          value={activeRequests.length}
+          hint={`${requests.filter((request) => request.approveStatus === "PENDING").length} pending`}
+        />
+        <StatCard
+          icon={Banknote}
+          label="Earnings"
+          value={formatPrice(earnings)}
+          hint={`${paidRequests.length} paid request(s)`}
+        />
       </div>
 
       <div className="mt-8 flex items-center gap-2">

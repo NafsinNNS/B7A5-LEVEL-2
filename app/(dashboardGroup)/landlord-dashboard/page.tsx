@@ -1,12 +1,16 @@
 import { redirect } from "next/navigation";
-import { Building2, FileText } from "lucide-react";
+import { Building2, FileText, Inbox } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { getMe } from "@/service/getMe";
 import { getCategories } from "@/app/(publicGroup)/_actions/getCategories";
-import { getLandlordProperties } from "../_actions/landlordActions";
+import {
+  getLandlordProperties,
+  getLandlordRequests,
+} from "../_actions/landlordActions";
 import { LandlordPropertiesList } from "../_components/landlord-properties-list";
-import type { TCategory, TProperty } from "@/lib/types";
+import { LandlordRequestsList } from "../_components/landlord-requests-list";
+import type { TCategory, TProperty, TRentalRequest } from "@/lib/types";
 
 const LandlordDashboardPage = async () => {
   const userResult = await getMe();
@@ -22,13 +26,16 @@ const LandlordDashboardPage = async () => {
     redirect("/admin-dashboard");
   }
 
-  const [propertiesResult, categoriesResult] = await Promise.all([
-    getLandlordProperties(),
-    getCategories(),
-  ]);
+  const [propertiesResult, categoriesResult, requestsResult] =
+    await Promise.all([
+      getLandlordProperties(),
+      getCategories(),
+      getLandlordRequests(),
+    ]);
 
   const properties: TProperty[] = propertiesResult?.data || [];
   const categories: TCategory[] = categoriesResult?.data || [];
+  const requests: TRentalRequest[] = requestsResult?.data || [];
 
   return (
     <div>
@@ -57,6 +64,15 @@ const LandlordDashboardPage = async () => {
           properties={properties}
           categories={categories}
         />
+      </div>
+
+      <div className="mt-10 flex items-center gap-2">
+        <Inbox className="size-5 text-primary" />
+        <h2 className="text-lg font-semibold">Rental Requests</h2>
+        <Badge variant="outline">{requests.length}</Badge>
+      </div>
+      <div className="mt-4">
+        <LandlordRequestsList requests={requests} />
       </div>
     </div>
   );

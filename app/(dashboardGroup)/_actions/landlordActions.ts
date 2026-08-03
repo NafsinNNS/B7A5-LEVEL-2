@@ -2,7 +2,7 @@
 
 import { cookies } from "next/headers";
 import { revalidateTag } from "next/cache";
-import type { TApiResponse, TProperty } from "@/lib/types";
+import type { TApiResponse, TProperty, TRentalRequest } from "@/lib/types";
 
 const getAuthHeaders = async () => {
   const cookieStore = await cookies();
@@ -108,5 +108,70 @@ export const deleteLandlordProperty = async (propertyId: string) => {
       message: "Failed to delete property",
       data: null,
     } as TApiResponse<TProperty | null>;
+  }
+};
+
+export const getLandlordRequests = async () => {
+  const headers = await getAuthHeaders();
+  if (!headers) {
+    return {
+      success: false,
+      statusCode: 401,
+      message: "Not authenticated",
+      data: [],
+    } as TApiResponse<TRentalRequest[]>;
+  }
+
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/landlord/requests`,
+      { headers, cache: "no-store" }
+    );
+    const result = await res.json();
+    return result as TApiResponse<TRentalRequest[]>;
+  } catch {
+    return {
+      success: false,
+      statusCode: 500,
+      message: "Failed to fetch rental requests",
+      data: [],
+    } as TApiResponse<TRentalRequest[]>;
+  }
+};
+
+export const updateRequestStatus = async (
+  requestId: string,
+  status: TRentalRequest["approveStatus"]
+) => {
+  const headers = await getAuthHeaders();
+  if (!headers) {
+    return {
+      success: false,
+      statusCode: 401,
+      message: "Not authenticated",
+      data: null,
+    } as TApiResponse<TRentalRequest | null>;
+  }
+
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/landlord/requests/${requestId}`,
+      {
+        method: "PATCH",
+        headers: { ...headers, "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+        cache: "no-store",
+      }
+    );
+    const result = await res.json();
+    revalidateTag("landlord-requests", "max");
+    return result as TApiResponse<TRentalRequest>;
+  } catch {
+    return {
+      success: false,
+      statusCode: 500,
+      message: "Failed to update request status",
+      data: null,
+    } as TApiResponse<TRentalRequest | null>;
   }
 };
